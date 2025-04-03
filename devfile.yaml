@@ -59,6 +59,6 @@ commands:
   - id: reload-nginx
     exec:
       component: nginx
-      commandLine: cp /projects/gateway/nginx.conf /etc/nginx/nginx.conf && nginx -s reload
+      commandLine: cp /spring-microservices-openshift/gateway/nginx.conf /etc/nginx/nginx.conf && nginx -s reload
       group:
         kind: build
