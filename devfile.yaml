@@ -1,0 +1,64 @@
+schemaVersion: 2.2.0
+metadata:
+  name: developer-workspace
+components:
+  - name: nginx
+    container:
+      image: nginx:alpine
+      memoryLimit: 512Mi
+      endpoints:
+        - name: gateway
+          targetPort: 8080
+          exposure: public
+      volumeMounts:
+        - name: nginx-conf
+          path: /etc/nginx
+
+  - name: service-container
+    container:
+      image: maven:3.8-openjdk-17
+      memoryLimit: 3Gi
+      mountSources: true
+
+  - name: nginx-conf
+    volume: {}
+
+commands:
+  - id: run-service-a
+    exec:
+      component: service-container
+      workingDir: /spring-microservices-openshift/service-a
+      commandLine: mvn spring-boot:run
+      group:
+        kind: run
+
+  - id: run-service-b
+    exec:
+      component: service-container
+      workingDir: /spring-microservices-openshift/service-b
+      commandLine: mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8082
+      group:
+        kind: run
+
+  - id: run-service-c
+    exec:
+      component: service-container
+      workingDir: /spring-microservices-openshift/service-c
+      commandLine: mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8083
+      group:
+        kind: run
+
+  - id: run-service-d
+    exec:
+      component: service-container
+      workingDir: /spring-microservices-openshift/service-d
+      commandLine: mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8084
+      group:
+        kind: run
+
+  - id: reload-nginx
+    exec:
+      component: nginx
+      commandLine: cp /spring-microservices-openshift/gateway/nginx.conf /etc/nginx/nginx.conf && nginx -s reload
+      group:
+        kind: build
