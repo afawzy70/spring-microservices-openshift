@@ -1,0 +1,44 @@
+schemaVersion: 2.2.0
+metadata:
+  name: dev1-workspace
+components:
+  - name: nginx
+    container:
+      image: nginx:alpine
+      memoryLimit: 512Mi
+      endpoints:
+        - name: gateway
+          targetPort: 8080
+          exposure: public
+      volumeMounts:
+        - name: nginx-conf
+          path: /etc/nginx
+
+  - name: service-a
+    container:
+      image: maven:3.8-openjdk-17
+      memoryLimit: 1Gi
+      command: ["mvn", "spring-boot:run"]
+      workingDir: /projects/service-a
+      mountSources: true
+
+  - name: service-b
+    container:
+      image: maven:3.8-openjdk-17
+      memoryLimit: 1Gi
+      command: ["mvn", "spring-boot:run", "-Dspring-boot.run.arguments=--server.port=8082"]
+      workingDir: /projects/service-b
+      mountSources: true
+
+  - name: nginx-conf
+    volume: {}
+
+commands:
+  - id: reload-nginx
+    exec:
+      component: nginx
+      commandLine: |
+        cp /projects/gateway/nginx.conf /etc/nginx/nginx.conf && nginx -s reload
+      group:
+        kind: build
+        isDefault: true
